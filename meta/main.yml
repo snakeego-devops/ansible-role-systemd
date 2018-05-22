@@ -1,3 +1,4 @@
-description: Simple role for generation systemd services based on external templates
-author: Igor Voropaev <snake@itpc.ru>
-licence: MIT
+galaxy_info:
+  description: Simple role for generation systemd services based on external templates
+  author: Igor Voropaev <snake@itpc.ru>
+  licence: MIT
