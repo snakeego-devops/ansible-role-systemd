@@ -1,0 +1,24 @@
+---
+- name: Generate simple configurations
+  template:
+    src: files/systemd/{{ item.file }}.j2
+    dest: /etc/systemd/system/{{ item.target | default(item.file) }}
+  with_items: "{{ systemd_service_units }}"
+  when: systemd_service_units
+  register: systemd_services
+  tags: &TAGS
+    - systemd
+
+- name: Register services
+  systemd: 
+    name: "{{ item }}"
+    enabled: yes
+  with_items: "{{ systemd_service_enabled }}"
+  when: systemd_service_enabled
+  tags: *TAGS
+
+- name: Reload Systemd daemon
+  systemd:
+    daemon-reload: yes
+  when: systemd_services.changed
+  tags: *TAGS
