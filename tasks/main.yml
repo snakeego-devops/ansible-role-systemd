@@ -1,24 +1,41 @@
 ---
-- name: Generate simple configurations
+- name: Generate base configurations
   template:
     src: files/systemd/{{ item.file }}.j2
     dest: /etc/systemd/system/{{ item.target | default(item.file) }}
-  with_items: "{{ systemd_service_units }}"
-  when: systemd_service_units
-  register: systemd_services
+  with_items: "{{ systemd_default.units }}"
+  when: systemd_default.units
+  register: systemd_changed_default
   tags: &TAGS
     - systemd
 
-- name: Register services
+- name: Register base services
   systemd: 
     name: "{{ item }}"
     enabled: yes
-  with_items: "{{ systemd_service_enabled }}"
-  when: systemd_service_enabled
+  with_items: "{{ systemd_default.enable }}"
+  when: systemd_default.enable
+  tags: *TAGS
+
+- name: Generate host-based configurations
+  template:
+    src: files/systemd/{{ item.file }}.j2
+    dest: /etc/systemd/system/{{ item.target | default(item.file) }}
+  with_items: "{{ systemd_host.units }}"
+  when: systemd_host.units
+  register: systemd_changed_host
+  tags: *TAGS
+
+- name: Register host-based services
+  systemd: 
+    name: "{{ item }}"
+    enabled: yes
+  with_items: "{{ systemd_host.enable }}"
+  when: systemd_host.enable
   tags: *TAGS
 
 - name: Reload Systemd daemon
   systemd:
     daemon-reload: yes
-  when: systemd_services.changed
+  when: systemd_changed_default.changed or systemd_changed_host.changed
   tags: *TAGS
